@@ -30,6 +30,7 @@ let persons = [
 
 app.use(cors())
 app.use(express.json())
+app.use(express.static('dist'))
 app.use(morgan('tiny'))
 
 app.get('/info', (req, res) => {
