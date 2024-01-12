@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 
 const app = express()
 const port = 3001
@@ -27,6 +28,7 @@ let persons = [
     }
 ]
 
+app.use(cors())
 app.use(express.json())
 app.use(morgan('tiny'))
 
@@ -102,6 +104,7 @@ app.delete('/API/persons/:id', (req, res) => {
     res.json({ message: 'person deleted successfully' })
 })
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`)
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`)
 })
