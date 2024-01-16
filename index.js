@@ -11,7 +11,7 @@ app.use(express.json())
 app.use(express.static('dist'))
 app.use(morgan('tiny'))
 
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
     console.log('Get request at /info')
     Person.find({})
         .then(persons => {
@@ -22,7 +22,7 @@ app.get('/info', (req, res) => {
         .catch(error => next(error))
 })
 
-app.get('/API/persons', (req, res) => {
+app.get('/API/persons', (req, res, next) => {
     console.log('Get request at /API/persons')
     Person.find({})
         .then(persons => {
@@ -31,7 +31,7 @@ app.get('/API/persons', (req, res) => {
         .catch(error => next(error))
 })
 
-app.get('/API/persons/:id', (req, res) => {
+app.get('/API/persons/:id', (req, res, next) => {
     console.log('Specific get request at /API/persons')
     const id = req.params.id
     Person.findById(id)
@@ -55,11 +55,8 @@ const checkValid = (name) => {
         })
 }
 
-app.post('/API/persons', (req, res) => {
+app.post('/API/persons', (req, res, next) => {
     console.log('Post request')
-    const generateID = () => {
-        return Math.floor(Math.random() * 1e15)
-    }
 
     const new_person = new Person({
         name: req.body.name,
@@ -82,7 +79,7 @@ app.post('/API/persons', (req, res) => {
         .catch(error => next(error))
 })
 
-app.put('/API/persons/:id', (req, res) => {
+app.put('/API/persons/:id', (req, res, next) => {
     // END: be15d9bcejpp
     console.log('Put request')
     const id = req.params.id
@@ -98,7 +95,7 @@ app.put('/API/persons/:id', (req, res) => {
         })
 })
 
-app.delete('/API/persons/:id', (req, res) => {
+app.delete('/API/persons/:id', (req, res, next) => {
     console.log('Delete request')
     const id = req.params.id
     
@@ -116,7 +113,7 @@ const errorHandler = (error, request, response, next) => {
     console.error(error.message)
   
     if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
+        return response.status(400).send({ error: 'malformatted id' })
     } else if (error.name === 'ValidationError') {
         return response.status(400).send({ error: error.message })
     } else if (error.name === 'MongoError') {
@@ -126,7 +123,7 @@ const errorHandler = (error, request, response, next) => {
     }
   
     next(error)
-  }
+}
 
 app.use(errorHandler)
 
