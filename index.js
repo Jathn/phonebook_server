@@ -19,10 +19,7 @@ app.get('/info', (req, res) => {
             const resText = `Phonebook has info for ${persons.length} people <br />${time} `
             res.send(resText)
         })
-        .catch(error => {
-            console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
-        })
+        .catch(error => next(error))
 })
 
 app.get('/API/persons', (req, res) => {
@@ -31,15 +28,12 @@ app.get('/API/persons', (req, res) => {
         .then(persons => {
             res.json(persons)
         })
-        .catch(error => {
-            console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
-        })
+        .catch(error => next(error))
 })
 
 app.get('/API/persons/:id', (req, res) => {
     console.log('Specific get request at /API/persons')
-    const id = parseInt(req.params.id)
+    const id = req.params.id
     Person.findById(id)
         .then(person => {
             if (!person) {
@@ -47,10 +41,7 @@ app.get('/API/persons/:id', (req, res) => {
             }
             res.json(person)
         })
-        .catch(error => {
-            console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
-        })
+        .catch(error => next(error))
 })
 
 const checkValid = (name) => {
@@ -71,7 +62,6 @@ app.post('/API/persons', (req, res) => {
     }
 
     const new_person = new Person({
-        id: generateID(),
         name: req.body.name,
         number: req.body.number,
     })
@@ -84,23 +74,18 @@ app.post('/API/persons', (req, res) => {
                         res.status(201).json(savedPerson)
                         console.log(JSON.stringify(savedPerson))
                     })
-                    .catch(error => {
-                        console.log(error)
-                        res.status(500).json({ error: 'Internal server error' })
-                    })
+                    .catch(error => next(error))
             } else {
                 res.status(400).json({ error: 'name must be unique' })
             }
         })
-        .catch(error => {
-            console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
-        })
+        .catch(error => next(error))
 })
 
 app.put('/API/persons/:id', (req, res) => {
+    // END: be15d9bcejpp
     console.log('Put request')
-    const id = parseInt(req.params.id)
+    const id = req.params.id
     Person.findByIdAndUpdate(id, { name: req.body.name, number: req.body.number }, { new: true })
         .then(updatedPerson => {
             if (!updatedPerson) {
@@ -109,14 +94,13 @@ app.put('/API/persons/:id', (req, res) => {
             res.json(updatedPerson)
         })
         .catch(error => {
-            console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
+            next(error)
         })
 })
 
 app.delete('/API/persons/:id', (req, res) => {
     console.log('Delete request')
-    const id = parseInt(req.params.id)
+    const id = req.params.id
     
     Person.findByIdAndDelete(id)
         .then(() => {
@@ -124,9 +108,27 @@ app.delete('/API/persons/:id', (req, res) => {
         })
         .catch(error => {
             console.log(error)
-            res.status(500).json({ error: 'Internal server error' })
+            next(error)
         })
 })
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).send({ error: error.message })
+    } else if (error.name === 'MongoError') {
+        return response.status(400).send({ error: 'name must be unique' })
+    } else if (error.name === 'TypeError') {
+        return response.status(400).send({ error: 'missing content' })
+    }
+  
+    next(error)
+  }
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
